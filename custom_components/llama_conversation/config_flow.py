@@ -532,7 +532,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     hostname=self.model_config[CONF_HOST],
                     port=self.model_config[CONF_PORT],
                     ssl=self.model_config[CONF_SSL],
-                    path=f"/{api_base_path}/models"
+                    path=f"/api/models"
                 ),
                 timeout=5, # quick timeout
                 headers=headers
@@ -608,7 +608,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     hostname=self.model_config[CONF_HOST],
                     port=self.model_config[CONF_PORT],
                     ssl=self.model_config[CONF_SSL],
-                    path="/ollama/api/tags"
+                    path="/api/models"
                 ),
                 timeout=5, # quick timeout
                 headers=headers
@@ -616,9 +616,9 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                 response.raise_for_status()
                 models_result = await response.json()
 
-            for model in models_result["models"]:
+            for model in models_result["data"]:
                 model_name = self.model_config[CONF_CHAT_MODEL]
-                if model["name"] == model_name:
+                if model["id"] == model_name:
                     return (None, None, [])
 
             return "missing_model_api", None, [x["name"] for x in models_result["models"]]

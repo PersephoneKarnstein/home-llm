@@ -399,9 +399,9 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
 
         # generate a response
         try:
-            _LOGGER.debug(message_history)
+            _LOGGER.exception(message_history)
             response = await self._async_generate(message_history)
-            _LOGGER.debug(response)
+            _LOGGER.exception(response)
 
         except Exception as err:
             _LOGGER.exception("There was a problem talking to the backend")
@@ -441,6 +441,7 @@ class LocalLLMAgent(ConversationEntity, AbstractConversationAgent):
         to_say = service_call_pattern.sub("", response.strip())
         tool_response = None
         for block in service_call_pattern.findall(response.strip()):
+            _LOGGER.debug(block)
             parsed_tool_call: dict = json.loads(block)
 
             if llm_api.api.id == HOME_LLM_API_ID:
@@ -1595,7 +1596,7 @@ class OllamaAPIAgent(LocalLLMAgent):
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
             async with session.get(
-                f"{self.api_host}/ollama/api/tags",
+                f"{self.api_host}/api/models",
                 headers=headers,
             ) as response:
                 response.raise_for_status()
@@ -1605,7 +1606,7 @@ class OllamaAPIAgent(LocalLLMAgent):
             _LOGGER.debug("Connection error was: %s", repr(ex))
             raise ConfigEntryNotReady("There was a problem connecting to the remote server") from ex
 
-        model_names = [ x["name"] for x in currently_downloaded_result["models"] ]
+        model_names = [ x["id"] for x in currently_downloaded_result["data"] ]
         if ":" in self.model_name:
             if not any([ name == self.model_name for name in model_names]):
                 raise ConfigEntryNotReady(f"Ollama server does not have the provided model: {self.model_name}")
@@ -1615,7 +1616,7 @@ class OllamaAPIAgent(LocalLLMAgent):
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
 
-        endpoint = "/ollama/api/chat"
+        endpoint = "/api/chat/completions"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
@@ -1623,13 +1624,13 @@ class OllamaAPIAgent(LocalLLMAgent):
     def _completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
 
-        endpoint = "/ollama/api/generate"
-        request_params["prompt"] = self._format_prompt(conversation)
-        request_params["raw"] = True # ignore prompt template
+        endpoint = "/api/chat/completions"
+        request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
 
     def _extract_response(self, response_json: dict) -> str:
+        _LOGGER.exception(response_json)
         if response_json["done"] not in ["true", True]:
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
