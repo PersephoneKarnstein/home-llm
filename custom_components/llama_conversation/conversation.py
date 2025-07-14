@@ -1595,7 +1595,7 @@ class OllamaAPIAgent(LocalLLMAgent):
                 headers["Authorization"] = f"Bearer {self.api_key}"
 
             async with session.get(
-                f"{self.api_host}/api/tags",
+                f"{self.api_host}/ollama/api/tags",
                 headers=headers,
             ) as response:
                 response.raise_for_status()
@@ -1615,7 +1615,7 @@ class OllamaAPIAgent(LocalLLMAgent):
     def _chat_completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
 
-        endpoint = "/api/chat"
+        endpoint = "/ollama/api/chat"
         request_params["messages"] = [ { "role": x["role"], "content": x["message"] } for x in conversation ]
 
         return endpoint, request_params
@@ -1623,7 +1623,7 @@ class OllamaAPIAgent(LocalLLMAgent):
     def _completion_params(self, conversation: dict) -> (str, dict):
         request_params = {}
 
-        endpoint = "/api/generate"
+        endpoint = "/ollama/api/generate"
         request_params["prompt"] = self._format_prompt(conversation)
         request_params["raw"] = True # ignore prompt template
 
