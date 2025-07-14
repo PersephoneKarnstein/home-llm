@@ -1631,7 +1631,7 @@ class OllamaAPIAgent(LocalLLMAgent):
 
     def _extract_response(self, response_json: dict) -> str:
         _LOGGER.exception(response_json)
-        if response_json["done"] not in ["true", True]:
+        if response_json["choices"][0]["finish_reason"] not in ["stop", True]:
             _LOGGER.warning("Model response did not end on a stop token (unfinished sentence)")
 
         # TODO: this doesn't work because ollama caches prompts and doesn't always return the full prompt length
@@ -1640,9 +1640,10 @@ class OllamaAPIAgent(LocalLLMAgent):
         # if response_json["prompt_eval_count"] + max_tokens > context_len:
         #     self._warn_context_size()
 
-        if "response" in response_json:
-            return response_json["response"]
+        if "choices" in response_json.keys():
+            return response_json["choices"][0]["message"]["content"]
         else:
+            _LOGGER.warning(response_json)
             return response_json["message"]["content"]
 
     async def _async_generate(self, conversation: dict) -> str:
