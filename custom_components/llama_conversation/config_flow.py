@@ -534,7 +534,7 @@ class ConfigFlow(BaseLlamaConversationConfigFlow, config_entries.ConfigFlow, dom
                     ssl=self.model_config[CONF_SSL],
                     path=f"/api/models"
                 ),
-                timeout=5, # quick timeout
+                timeout=5000, # quick timeout
                 headers=headers
             ) as response:
                 response.raise_for_status()
